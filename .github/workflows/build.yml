@@ -1,0 +1,88 @@
+name: Build wiliwili for Knulli H700
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install host dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq \
+          build-essential cmake meson ninja-build \
+          wget git pkg-config python3 \
+          nasm yasm \
+          libssl-dev
+
+    - name: Cache toolchain
+      id: cache-toolchain
+      uses: actions/cache@v4
+      with:
+        path: aarch64-buildroot-linux-gnu_sdk-buildroot
+        key: toolchain-knulli-h700-rg35xx-plush-sdk-20240421
+
+    - name: Install Knulli H700 toolchain
+      if: steps.cache-toolchain.outputs.cache-hit != 'true'
+      run: make toolchain
+
+    - name: Inspect sysroot
+      run: make check
+
+    - name: Cache downloads
+      uses: actions/cache@v4
+      with:
+        path: download
+        key: downloads-${{ hashFiles('Makefile') }}
+
+    - name: Download sources
+      run: make download
+
+    - name: Build dependencies
+      run: make deps
+
+    - name: Build wiliwili
+      run: make wiliwili
+
+    - name: Package PortMaster port
+      run: make pkg
+
+    - name: List package contents
+      run: |
+        echo "=== Package structure ==="
+        find pkg/ -type f | head -50
+        echo ""
+        echo "=== Binary info ==="
+        file pkg/wiliwili/wiliwili || true
+        ls -lh pkg/wiliwili/wiliwili || true
+
+    - name: Upload PortMaster package
+      uses: actions/upload-artifact@v4
+      with:
+        name: wiliwili-knulli-h700
+        path: |
+          pkg/wiliwili.sh
+          pkg/wiliwili/
+        retention-days: 90
+
+    - name: Archive build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          build/ffmpeg/ffbuild/
+          build/*/meson-logs/
+          build/wiliwili/cmake-build/CMakeFiles/CMakeError.log
+          build/wiliwili/cmake-build/CMakeFiles/CMakeOutput.log
+        retention-days: 30

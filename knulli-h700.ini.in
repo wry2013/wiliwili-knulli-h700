@@ -1,0 +1,22 @@
+[built-in options]
+prefix = '/usr'
+buildtype = 'release'
+default_library = 'static'
+c_args = ['--sysroot=@SYSROOT@', '-march=armv8-a', '-mtune=cortex-a53']
+cpp_args = ['--sysroot=@SYSROOT@', '-march=armv8-a', '-mtune=cortex-a53']
+c_link_args = ['--sysroot=@SYSROOT@', '-L@SYSROOT@/usr/lib']
+cpp_link_args = ['--sysroot=@SYSROOT@', '-L@SYSROOT@/usr/lib']
+
+[binaries]
+c = '@TOOLCHAIN@/bin/@TARGET@-gcc'
+cpp = '@TOOLCHAIN@/bin/@TARGET@-g++'
+ar = '@TOOLCHAIN@/bin/@TARGET@-ar'
+nm = '@TOOLCHAIN@/bin/@TARGET@-nm'
+strip = '@TOOLCHAIN@/bin/@TARGET@-strip'
+pkgconfig = 'pkg-config'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'aarch64'
+cpu = 'arm64'
+endian = 'little'

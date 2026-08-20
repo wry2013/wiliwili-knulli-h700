@@ -1,0 +1,14 @@
+# Build artifacts
+build/
+download/
+aarch64-buildroot-linux-gnu_sdk-buildroot/
+knulli-h700.ini
+
+# Packaged output (keep directory structure)
+pkg/wiliwili/
+pkg/*.sh
+
+# Editor files
+*.swp
+*~
+.DS_Store

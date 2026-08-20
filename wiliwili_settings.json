@@ -1,0 +1,50 @@
+{
+    "comment": "wiliwili settings for Knulli RG35xx Pro (H700, 640x480, software decode)",
+
+    "player_osd_hide": 3000,
+
+    "limited_fps": 0,
+    "swap_interval": 1,
+
+    "video_quality_landscape_max": 80,
+    "video_quality_portrait_max": 64,
+
+    "image_cache_count": 8,
+    "image_cache_threads": 2,
+
+    "interface_scale": 0.85,
+
+    "scroll_speed": 100,
+
+    "minimum_window_width": 640,
+    "minimum_window_height": 480,
+
+    "up_filter": [],
+
+    "dlna_enable": false,
+    "dlna_ip": "",
+    "dlna_port": 9958,
+    "dlna_name": "wiliwili",
+
+    "tls_verify": true,
+    "proxy_use": false,
+    "proxy_type": 0,
+    "proxy_url": "",
+    "proxy_port": "",
+    "proxy_username": "",
+    "proxy_password": "",
+
+    "file_format": 4048,
+    "video_codec": 0,
+    "audio_quality": 30280,
+
+    "low_quality_decoding": true,
+    "hardware_decoding": false,
+    "decoding_cache": 10,
+
+    "tv_style_search": true,
+    "tv_style_player": true,
+
+    "custom_theme_color": "#FB7299",
+    "keymap": {}
+}
