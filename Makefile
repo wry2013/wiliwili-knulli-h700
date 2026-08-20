@@ -25,7 +25,7 @@ TOOLCHAIN := $(ROOT)/$(TC_DIR)
 SYSROOT   := $(TOOLCHAIN)/$(TARGET)/sysroot
 PREFIX    := $(ROOT)/build/out
 BUILD     := $(ROOT)/build
-TMPDIR    ?= $(ROOT)/build/tmp
+TMPDIR    := $(ROOT)/build/tmp
 DOWNLOAD  := $(ROOT)/download
 
 # ─── Toolchain binaries ───────────────────────────────────────────────────────
@@ -143,9 +143,9 @@ download:
 # ─── Extract helper ───────────────────────────────────────────────────────────
 
 define extract
+	@mkdir -p $(BUILD) $(TMPDIR)
 	@if [ ! -d $(BUILD)/$(1) ]; then \
 		echo ">>> Extracting $(1)..."; \
-		mkdir -p $(TMPDIR); \
 		tar xf $(DOWNLOAD)/$(2) -C $(TMPDIR); \
 		mv $(TMPDIR)/$(1) $(BUILD)/$(1); \
 	fi
