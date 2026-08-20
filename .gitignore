@@ -12,3 +12,4 @@ pkg/*.sh
 *.swp
 *~
 .DS_Store
+build-logs.zip

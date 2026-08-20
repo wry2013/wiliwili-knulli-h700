@@ -50,16 +50,10 @@ jobs:
 
     - name: Build dependencies
       run: |
-        echo "=== Environment ==="
+        set -x
         echo "TMPDIR=$TMPDIR"
-        echo "PWD=$PWD"
         ls -la download/
-        echo "=== Running make deps with debug ==="
-        make deps SHELL='/bin/sh -x' 2>&1 | tee build-deps.log || {
-          echo "=== make deps FAILED, last 80 lines of log ==="
-          tail -80 build-deps.log
-          exit 1
-        }
+        make deps V=1 2>&1
 
     - name: Build wiliwili
       run: make wiliwili
@@ -91,7 +85,6 @@ jobs:
       with:
         name: build-logs
         path: |
-          build-deps.log
           build/ffmpeg/ffbuild/
           build/*/meson-logs/
           build/wiliwili/cmake-build/CMakeFiles/CMakeError.log
