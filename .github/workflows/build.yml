@@ -56,12 +56,22 @@ jobs:
         EXIT=$?
         echo "make deps exited with $EXIT"
         tail -60 /tmp/deps.log
-        # Surface the real meson error (if any) from the failing dependency's log
+        # Extract the REAL error lines (ffmpeg 'ERROR:', meson 'ERROR:', compiler
+        # errors, etc.) so they survive GitHub's 10-annotation-per-step cap instead
+        # of being buried under recipe echoes.
+        DIAG=$(mktemp)
+        grep -nE "ERROR:|error:|fatal error|Unknown option|configure: error|cannot create executables|undefined reference|No such file or directory|meson.build:[0-9]+:|recipe for target|openssl not found|SSL" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
         for f in build/*/build/meson-logs/meson-log.txt; do
-          [ -f "$f" ] && echo "=== $f ===" && tail -50 "$f"
+          [ -f "$f" ] && grep -nE "ERROR:|error:|fatal|Unknown option|meson.build:[0-9]+:" "$f" >> "$DIAG" 2>/dev/null || true
         done
-        # Emit diagnostics as error annotations (deps tail + meson error logs)
-        { tail -40 /tmp/deps.log; for f in build/*/build/meson-logs/meson-log.txt; do [ -f "$f" ] && tail -50 "$f"; done; } | while IFS= read -r line; do
+        if [ ! -s "$DIAG" ]; then
+          echo ">>> No explicit error pattern matched; dumping tail of build log:" >> "$DIAG"
+          tail -50 /tmp/deps.log >> "$DIAG"
+          for f in build/*/build/meson-logs/meson-log.txt; do [ -f "$f" ] && tail -50 "$f" >> "$DIAG"; done
+        fi
+        echo "=== Diagnostic lines (real errors first) ==="
+        cat "$DIAG"
+        sort -u "$DIAG" | head -40 | while IFS= read -r line; do
           [ -n "$line" ] && echo "::error::$line"
         done
         exit $EXIT

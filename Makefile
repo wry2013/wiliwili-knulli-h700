@@ -304,7 +304,6 @@ $(PREFIX)/lib/libavcodec.a: $(PREFIX)/lib/libssl.a
 		--enable-small \
 		--enable-gpl \
 		--enable-openssl \
-		--with-ssl=$(PREFIX) \
 		--disable-sdl2 \
 		--disable-xlib \
 		--disable-libxcb \
@@ -317,7 +316,7 @@ $(PREFIX)/lib/libavcodec.a: $(PREFIX)/lib/libssl.a
 		--disable-audiotoolbox \
 		--disable-v4l2-m2m \
 		--extra-cflags="-I$(PREFIX)/include" \
-		--extra-ldflags="-L$(PREFIX)/lib" && \
+		--extra-ldflags="-L$(PREFIX)/lib -lpthread -ldl" && \
 	$(MAKE) -j$$(nproc) && \
 	$(MAKE) install
 
