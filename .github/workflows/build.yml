@@ -48,71 +48,47 @@ jobs:
     - name: Download sources
       run: make download
 
-    - name: Build dependencies
+    - name: Debug make
       shell: bash
       run: |
         set +e
-        {
-          echo "=== STEP START ==="
-          echo "PWD=$(pwd)"
-          echo "PATH=$PATH"
-          echo "--- which make ---"
-          which make
-          echo "--- make --version ---"
-          make --version
-          echo "--- ls toolchain ---"
-          ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/.installed 2>&1
-          echo "--- make -n openssl ---"
-          make -n openssl 2>&1
-          echo "MAKE_DRY_RUN_EXIT=$?"
-          echo "--- make deps (actual build) ---"
-          make deps 2>&1
-          echo "MAKE_DEPS_EXIT=$?"
-          echo "=== STEP END ==="
-        } > /tmp/build_deps.log 2>&1
-        cat /tmp/build_deps.log
-        echo "## Build Dependencies Debug" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        cat /tmp/build_deps.log >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "=== Files in workspace ==="
+        ls -la
+        echo "=== Check Makefile line endings ==="
+        file Makefile
+        cat -A Makefile | head -5
+        echo "=== Running make -n openssl ==="
+        make -n openssl > /tmp/make_out.txt 2>/tmp/make_err.txt
+        EXIT=$?
+        echo "EXIT CODE: $EXIT"
+        echo "=== STDOUT ==="
+        cat /tmp/make_out.txt
+        echo "=== STDERR ==="
+        cat /tmp/make_err.txt
+        echo "=== Emitting stderr as annotations ==="
+        while IFS= read -r line; do
+          [ -n "$line" ] && echo "::error::$line"
+        done < /tmp/make_err.txt
+        echo "=== Running make -pn openssl (first 30 lines) ==="
+        make -pn openssl 2>&1 | head -30
+        exit 0
 
     - name: Build wiliwili
       if: always()
       shell: bash
       run: |
         set +e
-        {
-          echo "=== BUILD WILIWILI START ==="
-          make wiliwili 2>&1
-          echo "MAKE_WILIWILI_EXIT=$?"
-          echo "=== BUILD WILIWILI END ==="
-        } > /tmp/build_wiliwili.log 2>&1
-        cat /tmp/build_wiliwili.log
-        echo "## Build wiliwili Debug" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        cat /tmp/build_wiliwili.log >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "=== Running make wiliwili ==="
+        make wiliwili 2>/tmp/make_wili_err.txt
+        EXIT=$?
+        echo "EXIT CODE: $EXIT"
+        echo "=== STDERR ==="
+        cat /tmp/make_wili_err.txt
+        head -20 /tmp/make_wili_err.txt | while IFS= read -r line; do
+          echo "::error::$line"
+        done
+        exit 0
 
     - name: Package PortMaster port
-      if: success()
+      if: always()
       run: make pkg
-
-    - name: List package contents
-      if: success()
-      run: |
-        echo "=== Package structure ==="
-        find pkg/ -type f | head -50
-        echo ""
-        echo "=== Binary info ==="
-        file pkg/wiliwili/wiliwili || true
-        ls -lh pkg/wiliwili/wiliwili || true
-
-    - name: Upload PortMaster package
-      if: success()
-      uses: actions/upload-artifact@v4
-      with:
-        name: wiliwili-knulli-h700
-        path: |
-          pkg/wiliwili.sh
-          pkg/wiliwili/
-        retention-days: 90
