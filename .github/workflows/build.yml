@@ -48,26 +48,41 @@ jobs:
     - name: Download sources
       run: make download
 
-    - name: Pre-build test
-      run: echo "runner is alive"
-
     - name: Build dependencies
+      shell: bash
       run: |
-        echo "=== make version ==="
+        set +e
+        set -x
+        echo "STEP_START"
+        pwd
+        ls -la
+        which make
         make --version
-        echo "=== toolchain .installed ==="
-        ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/.installed
-        echo "=== make -n openssl (dry run) ==="
-        make -n openssl 2>&1 || echo "MAKE_DRY_RUN_FAILED_WITH_CODE=$?"
-        echo "=== END ==="
+        echo "CHECKING_TOOLCHAIN"
+        ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/ 2>&1 || echo "TOOLCHAIN_DIR_MISSING"
+        echo "DRY_RUN_OPENSSL"
+        make -n openssl
+        echo "DRY_RUN_EXIT=$?"
+        echo "STEP_END"
+
+    - name: Upload debug log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-log
+        path: /home/runner/work/_temp/
+        retention-days: 1
 
     - name: Build wiliwili
+      if: success()
       run: make wiliwili
 
     - name: Package PortMaster port
+      if: success()
       run: make pkg
 
     - name: List package contents
+      if: success()
       run: |
         echo "=== Package structure ==="
         find pkg/ -type f | head -50
@@ -77,6 +92,7 @@ jobs:
         ls -lh pkg/wiliwili/wiliwili || true
 
     - name: Upload PortMaster package
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: wiliwili-knulli-h700
@@ -84,22 +100,3 @@ jobs:
           pkg/wiliwili.sh
           pkg/wiliwili/
         retention-days: 90
-
-    - name: Archive build logs on failure
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-logs
-        path: |
-          /tmp/openssl.log
-          /tmp/curl.log
-          /tmp/webp.log
-          /tmp/ass.log
-          /tmp/ffmpeg.log
-          /tmp/mpv.log
-          /tmp/sdl2.log
-          build/ffmpeg/ffbuild/
-          build/*/meson-logs/
-          build/wiliwili/cmake-build/CMakeFiles/CMakeError.log
-          build/wiliwili/cmake-build/CMakeFiles/CMakeOutput.log
-        retention-days: 30
