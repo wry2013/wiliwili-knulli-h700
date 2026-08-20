@@ -60,7 +60,10 @@ jobs:
         # errors, etc.) so they survive GitHub's 10-annotation-per-step cap instead
         # of being buried under recipe echoes.
         DIAG=$(mktemp)
-        grep -nE "ERROR:|error:|fatal error|Unknown option|configure: error|cannot create executables|undefined reference|No such file or directory|meson.build:[0-9]+:|recipe for target|openssl not found|SSL" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
+        # NOTE: do NOT match "SSL"/"OPENSSL" verbatim — openssl's normal compile
+        # command echoes contain OPENSSLDIR and would flood the 10-annotation cap,
+        # hiding the real compiler error. Match only actual error markers.
+        grep -nE "error:|ERROR:|fatal error|undefined reference|ld: cannot find|recipe for target|make\[[0-9]+\]: \*\*\*|meson.build:[0-9]+:|configure: error|openssl not found|cannot create executables|No such file or directory" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
         for f in build/*/build/meson-logs/meson-log.txt; do
           [ -f "$f" ] && grep -nE "ERROR:|error:|fatal|Unknown option|meson.build:[0-9]+:" "$f" >> "$DIAG" 2>/dev/null || true
         done
