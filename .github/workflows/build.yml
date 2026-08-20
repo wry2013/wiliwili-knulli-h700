@@ -53,10 +53,13 @@ jobs:
 
     - name: Build dependencies
       run: |
-        echo "step started"
-        make -n openssl
-        echo "dry run done, now building..."
-        make openssl
+        echo "=== make version ==="
+        make --version
+        echo "=== toolchain .installed ==="
+        ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/.installed
+        echo "=== make -n openssl (dry run) ==="
+        make -n openssl 2>&1 || echo "MAKE_DRY_RUN_FAILED_WITH_CODE=$?"
+        echo "=== END ==="
 
     - name: Build wiliwili
       run: make wiliwili
