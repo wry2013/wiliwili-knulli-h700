@@ -330,12 +330,11 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 	@echo ">>> Building mpv $(MPV_VER) (GLES3, no hwdec)..."
 	cd $(BUILD)/mpv-$(MPV_VER) && \
 	meson setup build --cross-file=$(ROOT)/knulli-h700.ini --default-library=static --prefix=$(PREFIX) \
-		-Dlibmpv=enabled \
-		-Dplayer=disabled \
+		-Dlibmpv=true \
 		-Dcplayer=false \
-		-Dbuild-date=disabled \
-		-Dtests=disabled \
-		-Dta-leak-report=disabled \
+		-Dbuild-date=false \
+		-Dtests=false \
+		-Dta-leak-report=false \
 		-Dglib=disabled \
 		-Dlua=disabled \
 		-Djavascript=disabled \
@@ -376,8 +375,6 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Djack=disabled \
 		-Dopensles=disabled \
 		-Doss-audio=disabled \
-		-Daudio-encoding=false \
-		-Dvideo-encoding=false \
 		-Dvaapi=disabled \
 		-Dvaapi-drm=disabled \
 		-Dvaapi-x11=disabled \
