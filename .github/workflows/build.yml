@@ -48,14 +48,14 @@ jobs:
     - name: Download sources
       run: make download
 
+    - name: Pre-build test
+      run: echo "runner is alive"
+
     - name: Build dependencies
       run: |
-        echo "hello world"
-        pwd
-        ls -la
-        which make
-        make --version
-        echo "=== Running make openssl ==="
+        echo "step started"
+        make -n openssl
+        echo "dry run done, now building..."
         make openssl
 
     - name: Build wiliwili
