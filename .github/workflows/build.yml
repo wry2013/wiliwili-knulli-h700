@@ -49,31 +49,14 @@ jobs:
       run: make download
 
     - name: Build dependencies
-      shell: bash
       run: |
-        set +e
-        echo "=== TMPDIR=$TMPDIR ==="
-        echo "=== PWD=$PWD ==="
-        ls -la download/
-        echo "=== Toolchain check ==="
-        ls aarch64-buildroot-linux-gnu_sdk-buildroot/.installed && echo "toolchain OK"
-        echo "=== Building deps one by one ==="
-        for dep in openssl curl webp ass ffmpeg mpv sdl2; do
-          echo ""
-          echo "====== Building $dep ======"
-          make $dep V=1 > /tmp/$dep.log 2>&1
-          RC=$?
-          if [ $RC -ne 0 ]; then
-            echo "FAILED: $dep (exit code $RC)"
-            echo "===== Last 60 lines of $dep.log ====="
-            tail -60 /tmp/$dep.log
-            exit $RC
-          else
-            echo "OK: $dep"
-            tail -5 /tmp/$dep.log
-          fi
-        done
-        echo "=== All dependencies built ==="
+        echo "hello world"
+        pwd
+        ls -la
+        which make
+        make --version
+        echo "=== Running make openssl ==="
+        make openssl
 
     - name: Build wiliwili
       run: make wiliwili
