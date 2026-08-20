@@ -125,20 +125,20 @@ download:
 	@echo ">>> Downloading dependency sources..."
 	mkdir -p $(DOWNLOAD)
 	cd $(DOWNLOAD) && \
-	wget -q --show-progress -c $(OPENSSL_URL) && \
-	wget -q --show-progress -c $(CURL_URL) && \
-	wget -q --show-progress -c $(LIBWEBP_URL) -O libwebp-$(LIBWEBP_VER).tar.gz && \
-	wget -q --show-progress -c $(FRIBIDI_URL) && \
-	wget -q --show-progress -c $(HARFBUZZ_URL) -O harfbuzz-$(HARFBUZZ_VER).tar.gz && \
-	wget -q --show-progress -c $(LIBASS_URL) && \
-	wget -q --show-progress -c $(FFMPEG_URL) && \
-	wget -q --show-progress -c $(MPV_URL) -O mpv-$(MPV_VER).tar.gz && \
-	wget -q --show-progress -c $(SDL2_URL) -O SDL-$(SDL2_VER).tar.gz
+	[ -f openssl-$(OPENSSL_VER).tar.gz ]  || wget -q --show-progress $(OPENSSL_URL) && \
+	[ -f curl-$(CURL_VER).tar.gz ]       || wget -q --show-progress $(CURL_URL) && \
+	[ -f libwebp-$(LIBWEBP_VER).tar.gz ] || wget -q --show-progress $(LIBWEBP_URL) -O libwebp-$(LIBWEBP_VER).tar.gz && \
+	[ -f fribidi-$(FRIBIDI_VER).tar.xz ] || wget -q --show-progress $(FRIBIDI_URL) && \
+	[ -f harfbuzz-$(HARFBUZZ_VER).tar.gz ] || wget -q --show-progress $(HARFBUZZ_URL) -O harfbuzz-$(HARFBUZZ_VER).tar.gz && \
+	[ -f libass-$(LIBASS_VER).tar.gz ]   || wget -q --show-progress $(LIBASS_URL) && \
+	[ -f ffmpeg-$(FFMPEG_VER).tar.bz2 ]  || wget -q --show-progress $(FFMPEG_URL) && \
+	[ -f mpv-$(MPV_VER).tar.gz ]         || wget -q --show-progress $(MPV_URL) -O mpv-$(MPV_VER).tar.gz && \
+	[ -f SDL-$(SDL2_VER).tar.gz ]        || wget -q --show-progress $(SDL2_URL) -O SDL-$(SDL2_VER).tar.gz
 	@if [ ! -d $(BUILD)/wiliwili ]; then \
 		echo ">>> Cloning wiliwili ($(WILIWILI_VER))..."; \
 		git clone --depth 1 --branch $(WILIWILI_VER) --recursive $(WILIWILI_URL) $(BUILD)/wiliwili; \
 	fi
-	@echo ">>> All sources downloaded."
+	@echo ">>> All sources ready."
 
 # ─── Extract helper ───────────────────────────────────────────────────────────
 
@@ -161,9 +161,7 @@ $(PREFIX)/lib/libssl.a: $(TOOLCHAIN)/.installed
 	cd $(BUILD)/openssl-$(OPENSSL_VER) && \
 	./Configure linux-aarch64 no-shared no-tests \
 		--prefix=$(PREFIX) \
-		--cross-compile-prefix=$(TARGET)- \
-		-D__ARM_MAX_ARCH__=8 \
-		-march=armv8-a -mtune=cortex-a53 && \
+		--cross-compile-prefix=$(TARGET)- && \
 	$(MAKE) -j$$(nproc) && \
 	$(MAKE) install_sw
 
