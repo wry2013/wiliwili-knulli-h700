@@ -49,11 +49,31 @@ jobs:
       run: make download
 
     - name: Build dependencies
+      shell: bash
       run: |
-        set -x
-        echo "TMPDIR=$TMPDIR"
+        set +e
+        echo "=== TMPDIR=$TMPDIR ==="
+        echo "=== PWD=$PWD ==="
         ls -la download/
-        make deps V=1 2>&1
+        echo "=== Toolchain check ==="
+        ls aarch64-buildroot-linux-gnu_sdk-buildroot/.installed && echo "toolchain OK"
+        echo "=== Building deps one by one ==="
+        for dep in openssl curl webp ass ffmpeg mpv sdl2; do
+          echo ""
+          echo "====== Building $dep ======"
+          make $dep V=1 > /tmp/$dep.log 2>&1
+          RC=$?
+          if [ $RC -ne 0 ]; then
+            echo "FAILED: $dep (exit code $RC)"
+            echo "===== Last 60 lines of $dep.log ====="
+            tail -60 /tmp/$dep.log
+            exit $RC
+          else
+            echo "OK: $dep"
+            tail -5 /tmp/$dep.log
+          fi
+        done
+        echo "=== All dependencies built ==="
 
     - name: Build wiliwili
       run: make wiliwili
@@ -85,6 +105,13 @@ jobs:
       with:
         name: build-logs
         path: |
+          /tmp/openssl.log
+          /tmp/curl.log
+          /tmp/webp.log
+          /tmp/ass.log
+          /tmp/ffmpeg.log
+          /tmp/mpv.log
+          /tmp/sdl2.log
           build/ffmpeg/ffbuild/
           build/*/meson-logs/
           build/wiliwili/cmake-build/CMakeFiles/CMakeError.log
