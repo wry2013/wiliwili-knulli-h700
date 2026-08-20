@@ -56,25 +56,22 @@ jobs:
         EXIT=$?
         echo "make deps exited with $EXIT"
         tail -60 /tmp/deps.log
-        # Extract the REAL error lines (ffmpeg 'ERROR:', meson 'ERROR:', compiler
-        # errors, etc.) so they survive GitHub's 10-annotation-per-step cap instead
-        # of being buried under recipe echoes.
+        # Extract the REAL failure. GitHub caps error annotations at 10 per step and
+        # shows the FIRST ones emitted, so we must emit the newest (failure-region)
+        # lines FIRST. `tail` preserves chronological order, so we reverse it with
+        # `tac` to put the failure at the top.
         DIAG=$(mktemp)
-        # NOTE: do NOT match "SSL"/"OPENSSL" verbatim — openssl's normal compile
-        # command echoes contain OPENSSLDIR and would flood the 10-annotation cap,
-        # hiding the real compiler error. Match only actual error markers.
-        grep -nE "error:|ERROR:|fatal error|undefined reference|ld: cannot find|recipe for target|make\[[0-9]+\]: \*\*\*|meson.build:[0-9]+:|configure: error|openssl not found|cannot create executables|No such file or directory" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
+        tail -50 /tmp/deps.log | tac >> "$DIAG"
         for f in build/*/build/meson-logs/meson-log.txt; do
-          [ -f "$f" ] && grep -nE "ERROR:|error:|fatal|Unknown option|meson.build:[0-9]+:" "$f" >> "$DIAG" 2>/dev/null || true
+          [ -f "$f" ] && tail -40 "$f" | tac >> "$DIAG"
         done
+        # Fallback: if the tail captured nothing, grep explicit error markers.
         if [ ! -s "$DIAG" ]; then
-          echo ">>> No explicit error pattern matched; dumping tail of build log:" >> "$DIAG"
-          tail -50 /tmp/deps.log >> "$DIAG"
-          for f in build/*/build/meson-logs/meson-log.txt; do [ -f "$f" ] && tail -50 "$f" >> "$DIAG"; done
+          grep -nE "error:|ERROR:|fatal error|undefined reference|recipe for target|meson.build:[0-9]+: ERROR|configure: error|cannot create executables" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
         fi
-        echo "=== Diagnostic lines (real errors first) ==="
+        echo "=== Diagnostic (newest first) ==="
         cat "$DIAG"
-        sort -u "$DIAG" | head -40 | while IFS= read -r line; do
+        awk '!seen[$0]++' "$DIAG" | head -40 | while IFS= read -r line; do
           [ -n "$line" ] && echo "::error::$line"
         done
         exit $EXIT
