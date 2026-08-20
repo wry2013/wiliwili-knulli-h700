@@ -49,10 +49,31 @@ jobs:
       run: make download
 
     - name: Build dependencies
-      run: make deps
+      shell: bash
+      run: |
+        set +e
+        make deps > /tmp/deps.log 2>&1
+        EXIT=$?
+        echo "make deps exited with $EXIT"
+        tail -40 /tmp/deps.log
+        # Emit last 20 lines as error annotations
+        tail -20 /tmp/deps.log | while IFS= read -r line; do
+          [ -n "$line" ] && echo "::error::$line"
+        done
+        exit $EXIT
 
     - name: Build wiliwili
-      run: make wiliwili
+      shell: bash
+      run: |
+        set +e
+        make wiliwili > /tmp/wiliwili.log 2>&1
+        EXIT=$?
+        echo "make wiliwili exited with $EXIT"
+        tail -40 /tmp/wiliwili.log
+        tail -20 /tmp/wiliwili.log | while IFS= read -r line; do
+          [ -n "$line" ] && echo "::error::$line"
+        done
+        exit $EXIT
 
     - name: Package PortMaster port
       run: make pkg
