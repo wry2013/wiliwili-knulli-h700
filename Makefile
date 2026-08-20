@@ -37,11 +37,17 @@ DOWNLOAD  := $(ROOT)/download
 # fix, so using it breaks openssl's Configure and other perl scripts.
 # Cross tools have the $(TARGET)- prefix and are still found.
 export PATH          := $(PATH):$(TOOLCHAIN)/bin
-export CC            := $(TARGET)-gcc
-export CXX           := $(TARGET)-g++
-export AR            := $(TARGET)-ar
-export RANLIB        := $(TARGET)-ranlib
-export STRIP         := $(TARGET)-strip
+
+# NOTE: do NOT export CC/CXX/AR/RANLIB/STRIP here.  Each dependency
+# specifies its cross-compiler via its own mechanism:
+#   - openssl:  --cross-compile-prefix=$(TARGET)-
+#   - curl/libass: --host=$(TARGET)
+#   - ffmpeg:   --cross-prefix=$(TARGET)-
+#   - cmake:    CMAKE_TOOLCHAIN_FILE
+#   - meson:    cross file (knulli-h700.ini)
+# Exporting CC *and* passing --cross-compile-prefix causes the prefix
+# to be doubled: aarch64-buildroot-linux-gnu-aarch64-buildroot-linux-gnu-gcc
+
 export CFLAGS        := -march=armv8-a -mtune=cortex-a53 -O2 -fPIC
 export CXXFLAGS      := -march=armv8-a -mtune=cortex-a53 -O2 -fPIC
 export PKG_CONFIG_PATH := $(PREFIX)/lib/pkgconfig:$(SYSROOT)/usr/lib/pkgconfig
