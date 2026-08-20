@@ -52,30 +52,46 @@ jobs:
       shell: bash
       run: |
         set +e
-        set -x
-        echo "STEP_START"
-        pwd
-        ls -la
-        which make
-        make --version
-        echo "CHECKING_TOOLCHAIN"
-        ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/ 2>&1 || echo "TOOLCHAIN_DIR_MISSING"
-        echo "DRY_RUN_OPENSSL"
-        make -n openssl
-        echo "DRY_RUN_EXIT=$?"
-        echo "STEP_END"
-
-    - name: Upload debug log
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug-log
-        path: /home/runner/work/_temp/
-        retention-days: 1
+        {
+          echo "=== STEP START ==="
+          echo "PWD=$(pwd)"
+          echo "PATH=$PATH"
+          echo "--- which make ---"
+          which make
+          echo "--- make --version ---"
+          make --version
+          echo "--- ls toolchain ---"
+          ls -la aarch64-buildroot-linux-gnu_sdk-buildroot/.installed 2>&1
+          echo "--- make -n openssl ---"
+          make -n openssl 2>&1
+          echo "MAKE_DRY_RUN_EXIT=$?"
+          echo "--- make deps (actual build) ---"
+          make deps 2>&1
+          echo "MAKE_DEPS_EXIT=$?"
+          echo "=== STEP END ==="
+        } > /tmp/build_deps.log 2>&1
+        cat /tmp/build_deps.log
+        echo "## Build Dependencies Debug" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat /tmp/build_deps.log >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
     - name: Build wiliwili
-      if: success()
-      run: make wiliwili
+      if: always()
+      shell: bash
+      run: |
+        set +e
+        {
+          echo "=== BUILD WILIWILI START ==="
+          make wiliwili 2>&1
+          echo "MAKE_WILIWILI_EXIT=$?"
+          echo "=== BUILD WILIWILI END ==="
+        } > /tmp/build_wiliwili.log 2>&1
+        cat /tmp/build_wiliwili.log
+        echo "## Build wiliwili Debug" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        cat /tmp/build_wiliwili.log >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
     - name: Package PortMaster port
       if: success()
