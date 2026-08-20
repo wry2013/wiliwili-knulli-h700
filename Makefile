@@ -48,6 +48,13 @@ export PATH          := $(PATH):$(TOOLCHAIN)/bin
 # Exporting CC *and* passing --cross-compile-prefix causes the prefix
 # to be doubled: aarch64-buildroot-linux-gnu-aarch64-buildroot-linux-gnu-gcc
 
+# Consumed by knulli-h700.cmake ($ENV{XTOOL}/$ENV{XHOST}).  These are plain
+# paths/names, not compiler vars, so exporting them cannot double prefixes.
+export XTOOL         := $(TOOLCHAIN)
+export XHOST         := $(TARGET)
+
+STRIP                := $(TOOLCHAIN)/bin/$(TARGET)-strip
+
 export CFLAGS        := -march=armv8-a -mtune=cortex-a53 -O2 -fPIC
 export CXXFLAGS      := -march=armv8-a -mtune=cortex-a53 -O2 -fPIC
 export PKG_CONFIG_PATH := $(PREFIX)/lib/pkgconfig:$(SYSROOT)/usr/lib/pkgconfig
