@@ -1,0 +1,8 @@
+﻿* text=auto eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+*.cmake text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+*.ini.in text eol=lf
