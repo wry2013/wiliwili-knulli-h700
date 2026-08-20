@@ -259,7 +259,7 @@ $(PREFIX)/lib/libharfbuzz.a: $(PREFIX)/lib/libfribidi.a
 	meson setup build --cross-file=$(ROOT)/knulli-h700.ini --default-library=static --prefix=$(PREFIX) \
 		-Dtests=disabled -Ddocs=disabled -Dbenchmark=disabled \
 		-Dicu=disabled -Dglib=disabled -Dgobject=disabled \
-		-Dcairo=disabled -Dfontconfig=disabled -Dfreetype=disabled && \
+		-Dcairo=disabled -Dfreetype=disabled && \
 	meson compile -C build -j$$(nproc) && \
 	meson install -C build
 

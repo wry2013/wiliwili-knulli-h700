@@ -13,7 +13,7 @@ cpp = '@TOOLCHAIN@/bin/@TARGET@-g++'
 ar = '@TOOLCHAIN@/bin/@TARGET@-ar'
 nm = '@TOOLCHAIN@/bin/@TARGET@-nm'
 strip = '@TOOLCHAIN@/bin/@TARGET@-strip'
-pkgconfig = 'pkg-config'
+pkg-config = 'pkg-config'
 
 [host_machine]
 system = 'linux'

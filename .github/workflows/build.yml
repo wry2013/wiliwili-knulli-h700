@@ -55,9 +55,13 @@ jobs:
         make deps > /tmp/deps.log 2>&1
         EXIT=$?
         echo "make deps exited with $EXIT"
-        tail -40 /tmp/deps.log
-        # Emit last 20 lines as error annotations
-        tail -20 /tmp/deps.log | while IFS= read -r line; do
+        tail -60 /tmp/deps.log
+        # Surface the real meson error (if any) from the failing dependency's log
+        for f in build/*/build/meson-logs/meson-log.txt; do
+          [ -f "$f" ] && echo "=== $f ===" && tail -50 "$f"
+        done
+        # Emit diagnostics as error annotations (deps tail + meson error logs)
+        { tail -40 /tmp/deps.log; for f in build/*/build/meson-logs/meson-log.txt; do [ -f "$f" ] && tail -50 "$f"; done; } | while IFS= read -r line; do
           [ -n "$line" ] && echo "::error::$line"
         done
         exit $EXIT
