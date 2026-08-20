@@ -26,8 +26,10 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-# H700 is Cortex-A53
-set(ARCH_FLAGS "-march=armv8-a -mtune=cortex-a53 -mfpu=neon-fp-armv8")
+# H700 is Cortex-A53 (aarch64). NOTE: do NOT pass -mfpu here — that option is
+# only valid for 32-bit ARM (AArch32); on aarch64 NEON is part of the base ISA
+# and -mfpu is rejected by the compiler ("unrecognized command-line option").
+set(ARCH_FLAGS "-march=armv8-a -mtune=cortex-a53")
 set(CMAKE_C_FLAGS_INIT   "${ARCH_FLAGS}")
 set(CMAKE_CXX_FLAGS_INIT "${ARCH_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS_INIT "${ARCH_FLAGS}")
