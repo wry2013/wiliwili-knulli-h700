@@ -30,7 +30,13 @@ DOWNLOAD  := $(ROOT)/download
 
 # ─── Toolchain binaries ───────────────────────────────────────────────────────
 
-export PATH          := $(TOOLCHAIN)/bin:$(PATH)
+# NOTE: append (not prepend) toolchain bin to PATH so that host tools
+# (perl, python3, make, pkg-config) from the runner take precedence.
+# The SDK ships its own perl with compiled-in @INC pointing at the
+# original build path (/h700/host/...) which relocate-sdk.sh does not
+# fix, so using it breaks openssl's Configure and other perl scripts.
+# Cross tools have the $(TARGET)- prefix and are still found.
+export PATH          := $(PATH):$(TOOLCHAIN)/bin
 export CC            := $(TARGET)-gcc
 export CXX           := $(TARGET)-g++
 export AR            := $(TARGET)-ar

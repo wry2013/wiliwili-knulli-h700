@@ -48,47 +48,41 @@ jobs:
     - name: Download sources
       run: make download
 
-    - name: Debug make
-      shell: bash
-      run: |
-        set +e
-        echo "=== Files in workspace ==="
-        ls -la
-        echo "=== Check Makefile line endings ==="
-        file Makefile
-        cat -A Makefile | head -5
-        echo "=== Running make -n openssl ==="
-        make -n openssl > /tmp/make_out.txt 2>/tmp/make_err.txt
-        EXIT=$?
-        echo "EXIT CODE: $EXIT"
-        echo "=== STDOUT ==="
-        cat /tmp/make_out.txt
-        echo "=== STDERR ==="
-        cat /tmp/make_err.txt
-        echo "=== Emitting stderr as annotations ==="
-        while IFS= read -r line; do
-          [ -n "$line" ] && echo "::error::$line"
-        done < /tmp/make_err.txt
-        echo "=== Running make -pn openssl (first 30 lines) ==="
-        make -pn openssl 2>&1 | head -30
-        exit 0
+    - name: Build dependencies
+      run: make deps
 
     - name: Build wiliwili
-      if: always()
-      shell: bash
-      run: |
-        set +e
-        echo "=== Running make wiliwili ==="
-        make wiliwili 2>/tmp/make_wili_err.txt
-        EXIT=$?
-        echo "EXIT CODE: $EXIT"
-        echo "=== STDERR ==="
-        cat /tmp/make_wili_err.txt
-        head -20 /tmp/make_wili_err.txt | while IFS= read -r line; do
-          echo "::error::$line"
-        done
-        exit 0
+      run: make wiliwili
 
     - name: Package PortMaster port
-      if: always()
       run: make pkg
+
+    - name: List package contents
+      run: |
+        echo "=== Package structure ==="
+        find pkg/ -type f | head -50
+        echo ""
+        echo "=== Binary info ==="
+        file pkg/wiliwili/wiliwili || true
+        ls -lh pkg/wiliwili/wiliwili || true
+
+    - name: Upload PortMaster package
+      uses: actions/upload-artifact@v4
+      with:
+        name: wiliwili-knulli-h700
+        path: |
+          pkg/wiliwili.sh
+          pkg/wiliwili/
+        retention-days: 90
+
+    - name: Archive build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          build/ffmpeg/ffbuild/
+          build/*/meson-logs/
+          build/wiliwili/cmake-build/CMakeFiles/CMakeError.log
+          build/wiliwili/cmake-build/CMakeFiles/CMakeOutput.log
+        retention-days: 30
