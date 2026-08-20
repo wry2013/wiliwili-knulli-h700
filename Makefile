@@ -303,6 +303,7 @@ $(PREFIX)/lib/libavcodec.a: $(PREFIX)/lib/libssl.a
 		--disable-shared --enable-static \
 		--enable-small \
 		--enable-gpl \
+		--enable-nonfree \
 		--enable-openssl \
 		--disable-sdl2 \
 		--disable-xlib \
