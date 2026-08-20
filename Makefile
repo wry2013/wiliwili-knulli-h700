@@ -335,20 +335,14 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Dbuild-date=false \
 		-Dtests=false \
 		-Dta-leak-report=false \
-		-Dglib=disabled \
 		-Dlua=disabled \
 		-Djavascript=disabled \
 		-Dzimg=disabled \
 		-Dlcms2=disabled \
 		-Dvapoursynth=disabled \
-		-Dass=enabled \
 		-Drubberband=disabled \
 		-Dzlib=enabled \
-		-Dfreetype=enabled \
-		-Dfribidi=enabled \
-		-Dharfbuzz=enabled \
 		-Dlibavdevice=disabled \
-		-Dlibavfilter=disabled \
 		-Diconv=disabled \
 		-Dmanpage-build=disabled \
 		-Dgpl=true \
@@ -380,7 +374,6 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Dvaapi-x11=disabled \
 		-Dvaapi-wayland=disabled \
 		-Dvdpau=disabled \
-		-Dv4l2=disabled \
 		-Dvideotoolbox-gl=disabled \
 		-Dd3d-hwaccel=disabled \
 		-Dd3d9-hwaccel=disabled \
@@ -388,17 +381,11 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Dios-gl=disabled \
 		-Dvulkan-interop=disabled \
 		-Dcuda-hwaccel=disabled \
-		-Dnvdec=disabled \
-		-Ddxva2-hwaccel=disabled \
 		-Dandroid-media-ndk=disabled \
-		-Dmediafoundation=disabled \
 		-Dplain-gl=enabled \
 		-Dgl-x11=disabled \
-		-Dgl-wayland=disabled \
-		-Dgl-drm=disabled \
 		-Dgl-win32=disabled \
 		-Dgl-cocoa=disabled \
-		-Dgl-egl=enabled \
 		--wrap-mode=nofallback && \
 	meson compile -C build -j$$(nproc) && \
 	meson install -C build
