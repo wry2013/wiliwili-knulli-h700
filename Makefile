@@ -360,7 +360,7 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Dx11=disabled \
 		-Ddrm=disabled \
 		-Dgbm=disabled \
-		-Degl=enabled \
+		-Degl=disabled \
 		-Dgl=enabled \
 		-Dvulkan=disabled \
 		-Dalsa=enabled \
