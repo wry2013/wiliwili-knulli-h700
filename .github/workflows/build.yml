@@ -56,24 +56,27 @@ jobs:
         EXIT=$?
         echo "make deps exited with $EXIT"
         tail -60 /tmp/deps.log
-        # Extract the REAL failure. GitHub caps error annotations at 10 per step and
-        # shows the FIRST ones emitted, so we must emit the newest (failure-region)
-        # lines FIRST. `tail` preserves chronological order, so we reverse it with
-        # `tac` to put the failure at the top.
-        DIAG=$(mktemp)
-        tail -50 /tmp/deps.log | tac >> "$DIAG"
-        for f in build/*/build/meson-logs/meson-log.txt; do
-          [ -f "$f" ] && tail -40 "$f" | tac >> "$DIAG"
-        done
-        # Fallback: if the tail captured nothing, grep explicit error markers.
-        if [ ! -s "$DIAG" ]; then
-          grep -nE "error:|ERROR:|fatal error|undefined reference|recipe for target|meson.build:[0-9]+: ERROR|configure: error|cannot create executables" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
+        # Only surface annotations on FAILURE. GitHub limits how many error
+        # annotations a run keeps; emitting 40 lines on every success would
+        # crowd out the real failure from later steps (wiliwili/pkg).
+        if [ $EXIT -ne 0 ]; then
+          # Extract the REAL failure. GitHub caps error annotations at 10 per step
+          # and shows the FIRST ones emitted, so we emit the newest
+          # (failure-region) lines FIRST via `tac` (reverse of `tail`).
+          DIAG=$(mktemp)
+          tail -50 /tmp/deps.log | tac >> "$DIAG"
+          for f in build/*/build/meson-logs/meson-log.txt; do
+            [ -f "$f" ] && tail -40 "$f" | tac >> "$DIAG"
+          done
+          if [ ! -s "$DIAG" ]; then
+            grep -nE "error:|ERROR:|fatal error|undefined reference|recipe for target|meson.build:[0-9]+: ERROR|configure: error|cannot create executables" /tmp/deps.log >> "$DIAG" 2>/dev/null || true
+          fi
+          echo "=== Diagnostic (newest first) ==="
+          cat "$DIAG"
+          awk '!seen[$0]++' "$DIAG" | head -40 | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::$line"
+          done
         fi
-        echo "=== Diagnostic (newest first) ==="
-        cat "$DIAG"
-        awk '!seen[$0]++' "$DIAG" | head -40 | while IFS= read -r line; do
-          [ -n "$line" ] && echo "::error::$line"
-        done
         exit $EXIT
 
     - name: Build wiliwili
@@ -83,14 +86,42 @@ jobs:
         make wiliwili > /tmp/wiliwili.log 2>&1
         EXIT=$?
         echo "make wiliwili exited with $EXIT"
-        tail -40 /tmp/wiliwili.log
-        tail -20 /tmp/wiliwili.log | while IFS= read -r line; do
-          [ -n "$line" ] && echo "::error::$line"
-        done
+        tail -60 /tmp/wiliwili.log
+        if [ $EXIT -ne 0 ]; then
+          DIAG=$(mktemp)
+          tail -50 /tmp/wiliwili.log | tac >> "$DIAG"
+          for f in build/wiliwili/cmake-build/CMakeFiles/CMakeError.log build/wiliwili/cmake-build/CMakeFiles/CMakeOutput.log; do
+            [ -f "$f" ] && tail -40 "$f" | tac >> "$DIAG"
+          done
+          if [ ! -s "$DIAG" ]; then
+            grep -nE "error:|ERROR:|fatal error|undefined reference|recipe for target|CMake Error|could not be found|not found" /tmp/wiliwili.log >> "$DIAG" 2>/dev/null || true
+          fi
+          echo "=== wiliwili Diagnostic (newest first) ==="
+          cat "$DIAG"
+          awk '!seen[$0]++' "$DIAG" | head -40 | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::$line"
+          done
+        fi
         exit $EXIT
 
     - name: Package PortMaster port
-      run: make pkg
+      shell: bash
+      run: |
+        set +e
+        make pkg > /tmp/pkg.log 2>&1
+        EXIT=$?
+        echo "make pkg exited with $EXIT"
+        tail -60 /tmp/pkg.log
+        if [ $EXIT -ne 0 ]; then
+          DIAG=$(mktemp)
+          tail -50 /tmp/pkg.log | tac >> "$DIAG"
+          echo "=== pkg Diagnostic (newest first) ==="
+          cat "$DIAG"
+          awk '!seen[$0]++' "$DIAG" | head -40 | while IFS= read -r line; do
+            [ -n "$line" ] && echo "::error::$line"
+          done
+        fi
+        exit $EXIT
 
     - name: List package contents
       run: |
