@@ -485,6 +485,16 @@ $(ROOT)/knulli-h700.ini: $(ROOT)/knulli-h700.ini.in
 
 # ─── wiliwili ─────────────────────────────────────────────────────────────────
 
+# wiliwili's CMake (PLATFORM_DESKTOP) only links ${MPV_LIBRARY} for the whole
+# media stack and does NOT pull in ffmpeg/ass/curl itself. Because we build
+# everything STATIC (outside the sysroot), we must hand CMake the full list of
+# static archives plus the system shared libs they need. --start-group/--end-group
+# lets the linker resolve the cyclic static dependencies in any order.
+# All paths are absolute so find_library's FIND_ROOT_PATH sandbox is irrelevant
+# for the actual link (we still add PREFIX to CMAKE_FIND_ROOT_PATH so that
+# find_package(CURL)/FindMPV's own probes can locate the libs).
+MPV_LINK := -Wl,--start-group;$(PREFIX)/lib/libmpv.a;$(PREFIX)/lib/libavcodec.a;$(PREFIX)/lib/libavformat.a;$(PREFIX)/lib/libavutil.a;$(PREFIX)/lib/libswscale.a;$(PREFIX)/lib/libswresample.a;$(PREFIX)/lib/libpostproc.a;$(PREFIX)/lib/libavfilter.a;$(PREFIX)/lib/libass.a;$(PREFIX)/lib/libfribidi.a;$(PREFIX)/lib/libharfbuzz.a;$(PREFIX)/lib/libcurl.a;$(PREFIX)/lib/libssl.a;$(PREFIX)/lib/libcrypto.a;-Wl,--end-group;-lfreetype;-lEGL;-lGLESv2;-lasound;-ldl;-lpthread;-lm
+
 wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a $(PREFIX)/lib/libwebp.a $(ROOT)/knulli-h700.ini
 	@if [ ! -d $(BUILD)/wiliwili ]; then \
 		echo ">>> Cloning wiliwili..."; \
@@ -497,11 +507,15 @@ wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX=$(PREFIX) \
 		-DCMAKE_PREFIX_PATH=$(PREFIX) \
+		-DCMAKE_FIND_ROOT_PATH="$(SYSROOT);$(PREFIX)" \
 		-DMPV_INCLUDE_DIR=$(PREFIX)/include \
+		-DMPV_LIBRARY_mpv=$(PREFIX)/lib/libmpv.a \
+		-DMPV_LIBRARY="$(MPV_LINK)" \
 		-DPLATFORM_DESKTOP=ON \
 		-DUSE_SYSTEM_CURL=ON \
 		-DUSE_SYSTEM_SDL2=ON \
 		-DMPV_NO_FB=ON \
+		-DDISABLE_WEBP=ON \
 		-DUSE_SDL2=ON \
 		-DUSE_GLES3=ON \
 		-DCMAKE_CXX_FLAGS="-DKNULLI_H700 -I$(PREFIX)/include" \
