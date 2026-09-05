@@ -272,6 +272,7 @@ $(PREFIX)/lib/libass.a: $(PREFIX)/lib/libfribidi.a $(PREFIX)/lib/libharfbuzz.a
 		--build=x86_64-linux-gnu \
 		--disable-shared --enable-static \
 		--disable-require-system-font-provider \
+		--disable-fontconfig \
 		FREETYPE_CFLAGS="-I$(SYSROOT)/usr/include/freetype2" \
 		FREETYPE_LIBS="-lfreetype" \
 		FRIBIDI_CFLAGS="-I$(PREFIX)/include/fribidi" \
