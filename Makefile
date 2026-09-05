@@ -526,8 +526,12 @@ wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a
 		-DMPV_LIBRARY="$(MPV_LINK)" \
 		-DSDL2_LIBRARY=$(PREFIX)/lib/libSDL2.a \
 		-DSDL2_INCLUDE_DIR=$(PREFIX)/include/SDL2 \
+		-DSDL2_DIR=$(PREFIX)/lib/cmake/SDL2 \
 		-DCURL_LIBRARY=$(PREFIX)/lib/libcurl.a \
 		-DCURL_INCLUDE_DIR=$(PREFIX)/include \
+		-DOPENSSL_SSL_LIBRARY=$(PREFIX)/lib/libssl.a \
+		-DOPENSSL_CRYPTO_LIBRARY=$(PREFIX)/lib/libcrypto.a \
+		-DOPENSSL_INCLUDE_DIR=$(PREFIX)/include \
 		-DPLATFORM_DESKTOP=ON \
 		-DUSE_SYSTEM_CURL=ON \
 		-DUSE_SYSTEM_SDL2=ON \
