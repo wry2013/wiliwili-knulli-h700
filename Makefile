@@ -64,7 +64,13 @@ CMAKE_TOOLCHAIN := $(ROOT)/knulli-h700.cmake
 
 # ─── Dependency versions ──────────────────────────────────────────────────────
 
-OPENSSL_VER  := 1.1.1q
+# NOTE: must be OpenSSL 3.x — the Knulli sysroot ships OpenSSL 3 headers on the
+# cross-compiler's default include path, and curl's configure compiles against
+# them (OpenSSL-3-only APIs like EVP_PKEY_get_bn_param / SSL_get1_peer_certificate
+# end up in libcurl.a). With 1.1.1 those symbols could only be satisfied by the
+# sysroot's SHARED libssl.so.3 (the leak). Building our own 3.x static makes
+# headers and libs ABI-consistent no matter which side configure picks.
+OPENSSL_VER  := 3.0.16
 CURL_VER     := 7.85.0
 LIBWEBP_VER  := 1.3.0
 FRIBIDI_VER  := 1.0.12
@@ -77,7 +83,7 @@ WILIWILI_VER := v1.6.0
 
 # ─── Download URLs ────────────────────────────────────────────────────────────
 
-OPENSSL_URL  := https://www.openssl.org/source/old/1.1.1/openssl-$(OPENSSL_VER).tar.gz
+OPENSSL_URL  := https://www.openssl.org/source/openssl-$(OPENSSL_VER).tar.gz
 CURL_URL     := https://curl.se/download/curl-$(CURL_VER).tar.gz
 LIBWEBP_URL  := https://github.com/webmproject/libwebp/archive/refs/tags/v$(LIBWEBP_VER).tar.gz
 FRIBIDI_URL  := https://github.com/fribidi/fribidi/releases/download/v$(FRIBIDI_VER)/fribidi-$(FRIBIDI_VER).tar.xz
@@ -178,7 +184,7 @@ $(PREFIX)/lib/libssl.a: $(TOOLCHAIN)/.installed
 	$(call extract,openssl-$(OPENSSL_VER),openssl-$(OPENSSL_VER).tar.gz)
 	@echo ">>> Building OpenSSL $(OPENSSL_VER)..."
 	cd $(BUILD)/openssl-$(OPENSSL_VER) && \
-	./Configure linux-aarch64 no-shared no-tests \
+	./Configure linux-aarch64 no-shared no-tests --libdir=lib \
 		--prefix=$(PREFIX) \
 		--cross-compile-prefix=$(TARGET)- && \
 	$(MAKE) -j$$(nproc) && \
