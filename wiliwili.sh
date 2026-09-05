@@ -21,6 +21,12 @@ while [ -h "$SOURCE" ]; do
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
+# ─── Fix permissions ──────────────────────────────────────────────────────────
+# Files copied to the SD card from Windows lose the executable bit.
+# Restore permissions for the whole port directory (same trick as other
+# working Knulli ports).
+chmod -R 777 "$DIR" 2>/dev/null || true
+
 cd "$DIR/wiliwili"
 
 # ─── Environment setup ────────────────────────────────────────────────────────

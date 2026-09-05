@@ -532,6 +532,7 @@ pkg: wiliwili
 	cp $(BUILD)/wiliwili/cmake-build/wiliwili $(ROOT)/pkg/wiliwili/
 	cp -r $(BUILD)/wiliwili/resources $(ROOT)/pkg/wiliwili/
 	cp $(ROOT)/wiliwili.sh $(ROOT)/pkg/
+	chmod +x $(ROOT)/pkg/wiliwili.sh $(ROOT)/pkg/wiliwili/wiliwili
 	# Bundle CA certificates
 	cp -r $(PREFIX)/ssl $(ROOT)/pkg/wiliwili/ssl 2>/dev/null || true
 	# Strip binary
