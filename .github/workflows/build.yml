@@ -131,6 +131,14 @@ jobs:
         echo "=== Binary info ==="
         file pkg/wiliwili/wiliwili || true
         ls -lh pkg/wiliwili/wiliwili || true
+        echo ""
+        echo "=== Dynamic dependencies (DT_NEEDED) ==="
+        echo "Should be ONLY version-stable system libs (libz/libfreetype/libEGL/libGLESv2/libasound/libm/libstdc++/libgcc_s/libc)."
+        echo "Any libavcodec/libmpv/libcurl/libSDL2/libass/libssl here means sysroot .so leakage — the port will crash on newer Knulli!"
+        ./aarch64-buildroot-linux-gnu_sdk-buildroot/bin/aarch64-buildroot-linux-gnu-readelf -d pkg/wiliwili/wiliwili | grep NEEDED || true
+        echo ""
+        echo "=== Max GLIBC version required ==="
+        strings pkg/wiliwili/wiliwili | grep -oE 'GLIBC_2\.[0-9]+' | sort -uV | tail -3 || true
 
     - name: Upload PortMaster package
       uses: actions/upload-artifact@v4

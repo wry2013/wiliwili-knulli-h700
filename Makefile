@@ -350,6 +350,8 @@ $(PREFIX)/lib/libmpv.a: $(PREFIX)/lib/libavcodec.a $(PREFIX)/lib/libass.a $(ROOT
 		-Ddvdnav=disabled \
 		-Ddvbin=disabled \
 		-Dlibbluray=disabled \
+		-Dlibarchive=disabled \
+		-Duchardet=disabled \
 		-Djpeg=disabled \
 		-Dsdl2=disabled \
 		-Dsdl2-gamepad=disabled \
@@ -491,9 +493,16 @@ $(ROOT)/knulli-h700.ini: $(ROOT)/knulli-h700.ini.in
 # static archives plus the system shared libs they need. --start-group/--end-group
 # lets the linker resolve the cyclic static dependencies in any order.
 # All paths are absolute so find_library's FIND_ROOT_PATH sandbox is irrelevant
-# for the actual link (we still add PREFIX to CMAKE_FIND_ROOT_PATH so that
-# find_package(CURL)/FindMPV's own probes can locate the libs).
-MPV_LINK := -Wl,--start-group;$(PREFIX)/lib/libmpv.a;$(PREFIX)/lib/libavcodec.a;$(PREFIX)/lib/libavformat.a;$(PREFIX)/lib/libavutil.a;$(PREFIX)/lib/libswscale.a;$(PREFIX)/lib/libswresample.a;$(PREFIX)/lib/libpostproc.a;$(PREFIX)/lib/libavfilter.a;$(PREFIX)/lib/libass.a;$(PREFIX)/lib/libfribidi.a;$(PREFIX)/lib/libharfbuzz.a;$(PREFIX)/lib/libcurl.a;$(PREFIX)/lib/libssl.a;$(PREFIX)/lib/libcrypto.a;-Wl,--end-group;-lfreetype;-lEGL;-lGLESv2;-lasound;-ldl;-lpthread;-lm
+# for the actual link.
+# IMPORTANT (Run #28 lesson): the Knulli sysroot ships SHARED dev libs
+# (libavcodec.so.58, libcurl.so.4, libSDL2.so, libass.so.9, ...). If any
+# find_library/pkg-config probe can see the sysroot, CMake links those .so's
+# instead of our .a's and the binary then requires the SDK-era library
+# versions at runtime (breaks on newer Knulli: missing libavcodec.so.58 etc).
+# So: wiliwili's cmake runs with PKG_CONFIG_LIBDIR locked to our prefix, and
+# SDL2/CURL/MPV cache vars are pinned to our static archives below.
+# -Wl,--as-needed keeps only genuinely referenced system libs in DT_NEEDED.
+MPV_LINK := -Wl,--start-group;$(PREFIX)/lib/libmpv.a;$(PREFIX)/lib/libavcodec.a;$(PREFIX)/lib/libavformat.a;$(PREFIX)/lib/libavutil.a;$(PREFIX)/lib/libswscale.a;$(PREFIX)/lib/libswresample.a;$(PREFIX)/lib/libpostproc.a;$(PREFIX)/lib/libavfilter.a;$(PREFIX)/lib/libass.a;$(PREFIX)/lib/libfribidi.a;$(PREFIX)/lib/libharfbuzz.a;$(PREFIX)/lib/libcurl.a;$(PREFIX)/lib/libssl.a;$(PREFIX)/lib/libcrypto.a;-Wl,--end-group;-Wl,--as-needed;-lfreetype;-lEGL;-lGLESv2;-lasound;-lbz2;-llzma;-latomic;-lz;-ldl;-lpthread;-lm
 
 wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a $(PREFIX)/lib/libwebp.a $(ROOT)/knulli-h700.ini
 	@if [ ! -d $(BUILD)/wiliwili ]; then \
@@ -502,6 +511,9 @@ wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a
 	fi
 	@echo ">>> Building wiliwili..."
 	cd $(BUILD)/wiliwili && \
+	PKG_CONFIG_LIBDIR=$(PREFIX)/lib/pkgconfig \
+	PKG_CONFIG_PATH=$(PREFIX)/lib/pkgconfig \
+	PKG_CONFIG_SYSROOT_DIR= \
 	cmake -B cmake-build -G Ninja \
 		-DCMAKE_TOOLCHAIN_FILE=$(CMAKE_TOOLCHAIN) \
 		-DCMAKE_BUILD_TYPE=Release \
@@ -511,6 +523,10 @@ wiliwili: $(PREFIX)/lib/libmpv.a $(PREFIX)/lib/libSDL2.a $(PREFIX)/lib/libcurl.a
 		-DMPV_INCLUDE_DIR=$(PREFIX)/include \
 		-DMPV_LIBRARY_mpv=$(PREFIX)/lib/libmpv.a \
 		-DMPV_LIBRARY="$(MPV_LINK)" \
+		-DSDL2_LIBRARY=$(PREFIX)/lib/libSDL2.a \
+		-DSDL2_INCLUDE_DIR=$(PREFIX)/include/SDL2 \
+		-DCURL_LIBRARY=$(PREFIX)/lib/libcurl.a \
+		-DCURL_INCLUDE_DIR=$(PREFIX)/include \
 		-DPLATFORM_DESKTOP=ON \
 		-DUSE_SYSTEM_CURL=ON \
 		-DUSE_SYSTEM_SDL2=ON \
